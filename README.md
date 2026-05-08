@@ -29,4 +29,4 @@ Nothing is protected. Nothing is paid. Nothing is exclusive.
 
 The “security” is just:
 ```js
-const D_KEY = '29080';
+const D_KEY = '1234';
