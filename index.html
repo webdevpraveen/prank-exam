@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Member Preview — Private Stream</title>
+  <style>
+    :root {
+      --bg: #000;
+      --accent: #ffb900;
+      --panel: #0b0b0b;
+      --muted: #bfbfbf;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: #fff;
+      -webkit-font-smoothing: antialiased
+    }
+
+    .wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px
+    }
+
+    .card {
+      width: 100%;
+      max-width: 1100px;
+      border-radius: 14px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      background: linear-gradient(180deg, #070707, #0d0d0d);
+      box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7)
+    }
+
+    @media (max-width:900px) {
+      .card {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .viewer {
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px
+    }
+
+    .brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    .logo {
+      display: flex;
+      gap: 12px;
+      align-items: center
+    }
+
+    .logobox {
+      background: var(--accent);
+      color: #000;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: 800
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .intro-splash {
+      width: 100%;
+      height: 56vh;
+      min-height: 300px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #0a0a0a, #030303);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 18px;
+    }
+
+    .intro-splash h1 {
+      font-size: 2.2rem;
+      margin: 0;
+      color: var(--accent);
+      letter-spacing: 0.6px
+    }
+
+    .intro-splash p {
+      color: var(--muted);
+      margin-top: 10px;
+      font-size: 15px
+    }
+
+    .enter-btn {
+      margin-top: 18px;
+      padding: 12px 26px;
+      border-radius: 999px;
+      border: 0;
+      background: var(--accent);
+      color: #000;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45)
+    }
+
+    .enter-panel {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      align-items: center;
+      justify-content: center;
+      padding: 24px
+    }
+
+    .play-btn {
+      background: #111;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+      padding: 12px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700
+    }
+
+    .play-btn.primary {
+      background: var(--accent);
+      color: #000
+    }
+
+    .video-wrap {
+      position: relative;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      display: none;
+      align-items: center;
+      justify-content: center
+    }
+
+    .video-wrap.full {
+      height: 72vh;
+      min-height: 320px;
+      max-height: 88vh;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      background: #000
+    }
+
+    .sidebar {
+      padding: 24px;
+      border-left: 1px solid rgba(255, 255, 255, 0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 12px
+    }
+
+    @media (max-width:900px) {
+      .sidebar {
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.03)
+      }
+    }
+
+    .title {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 18px
+    }
+
+    .desc {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45
+    }
+
+    .pill {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      display: inline-block
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .ctrl {
+      background: #111;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 600
+    }
+
+    .ctrl.warn {
+      background: var(--accent);
+      color: #000;
+      border: 0
+    }
+
+    .footer {
+      margin-top: auto;
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .modal-back {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 60
+    }
+
+    .modal {
+      background: #070707;
+      border-radius: 12px;
+      padding: 18px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.03)
+    }
+
+    .modal h3 {
+      margin: 0 0 8px;
+      color: var(--accent)
+    }
+
+    .input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: transparent;
+      color: #fff;
+      margin-top: 8px;
+      font-size: 16px
+    }
+
+    .modal .actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 12px
+    }
+
+    .err {
+      color: #ff6666;
+      font-size: 13px;
+      margin-top: 8px;
+      display: none
+    }
+
+    @media (max-width:520px) {
+      .intro-splash h1 {
+        font-size: 1.6rem
+      }
+
+      .card {
+        border-radius: 12px
+      }
+
+      .video-wrap.full {
+        height: 60vh
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card" role="main" aria-labelledby="headline">
+      <!-- LEFT -->
+      <div class="viewer">
+        <div class="brand">
+          <div class="logo">
+            <div class="logobox">MEMBERS</div>
+            <div>
+              <div id="headline" class="meta">Members Only — 18+ Verified</div>
+              <div class="meta">Exclusive preview • Single short</div>
+            </div>
+          </div>
+          <div class="pill" id="durationPill">Short • 0:00</div>
+        </div>
+        <div class="intro-splash" id="introSplash" aria-hidden="false">
+          <h1>PRIVATE<span style="color:var(--muted);margin-left:8px">PREVIEW</span></h1>
+          <p class="meta">Member access required. One exclusive short — no previews available.</p>
+          <button class="enter-btn" id="enterBtn">Enter Members Area</button>
+        </div>
+
+        <div class="enter-panel" id="enterPanel" aria-hidden="true">
+          <div style="text-align:center">
+            <h2 style="margin:0;color:var(--accent)">Exclusive Member Preview</h2>
+            <p style="color:var(--muted);margin-top:6px">This clip is reserved for verified members. Click below to
+              proceed to the unlock step.</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+            <button class="play-btn primary" id="prepareBtn">Play Video</button>
+            <button class="play-btn" id="cancelPrep">Back</button>
+          </div>
+        </div>
+
+        <div class="video-wrap full" id="videoWrap" aria-hidden="true">
+          <video id="prankVideo" playsinline preload="metadata" webkit-playsinline>
+            <source src="prank.mp4" type="video/mp4">
+            Your browser does not support video playback.
+          </video>
+        </div>
+      </div>
+
+      <aside class="sidebar" aria-label="details">
+        <div>
+          <div class="title">Exclusive — Single Short</div>
+          <div class="desc" style="margin-top:8px">
+            Members only access. This short is a single, exclusive clip reserved for account holders. No preview
+            thumbnails are available until unlocked with a private key.
+          </div>
+        </div>
+
+        <div style="margin-top:6px">
+          <div class="pill">Format: MP4</div>
+          <div style="height:8px"></div>
+          <div class="pill" id="resPill">Resolution: —</div>
+        </div>
+
+        <div class="controls" style="margin-top:12px">
+          <button class="ctrl" id="downloadBtn">Download</button>
+          <button class="ctrl" id="shareBtn">Share</button>
+          <button class="ctrl warn" id="openFull">Open Full</button>
+        </div>
+
+        <div class="footer">Logged in as <strong>Owner</strong> • Private demo</div>
+      </aside>
+    </div>
+  </div>
+  <div class="modal-back" id="modalBack" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Enter Private Key</h3>
+      <p style="color:var(--muted);margin-top:6px">Enter the 5-digit key to unlock the exclusive preview.</p>
+      <input id="keyInput" class="input" type="password" placeholder="Enter key" autocomplete="off" />
+      <div class="err" id="errMsg">Incorrect key — try again.</div>
+      <div class="actions" style="display:flex;justify-content:flex-end;margin-top:12px">
+        <button class="ctrl" id="modalCancel">Cancel</button>
+        <button class="ctrl warn" id="modalSubmit">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const enterBtn = document.getElementById('enterBtn');
+    const introSplash = document.getElementById('introSplash');
+    const enterPanel = document.getElementById('enterPanel');
+    const prepareBtn = document.getElementById('prepareBtn');
+    const cancelPrep = document.getElementById('cancelPrep');
+    const modalBack = document.getElementById('modalBack');
+    const modalSubmit = document.getElementById('modalSubmit');
+    const modalCancel = document.getElementById('modalCancel');
+    const keyInput = document.getElementById('keyInput');
+    const errMsg = document.getElementById('errMsg');
+    const videoWrap = document.getElementById('videoWrap');
+    const prankVideo = document.getElementById('prankVideo');
+    const resPill = document.getElementById('resPill');
+    const durationPill = document.getElementById('durationPill');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const shareBtn = document.getElementById('shareBtn');
+    const openFull = document.getElementById('openFull');
+    const D_KEY = '1234';
+
+    enterBtn.addEventListener('click', () => {
+      introSplash.style.display = 'none';
+      enterPanel.style.display = 'flex';
+      introSplash.setAttribute('aria-hidden', 'true');
+      enterPanel.setAttribute('aria-hidden', 'false');
+      prankVideo.load();
+      prankVideo.addEventListener('loadedmetadata', function () {
+        const dur = formatTime(prankVideo.duration);
+        durationPill.textContent = 'Short • ' + dur;
+        resPill.textContent = 'Resolution: ' + (prankVideo.videoWidth || '—') + '×' + (prankVideo.videoHeight || '—');
+      }, { once: true });
+    });
+
+    cancelPrep.addEventListener('click', () => {
+      enterPanel.style.display = 'none';
+      introSplash.style.display = 'flex';
+      introSplash.setAttribute('aria-hidden', 'false');
+      enterPanel.setAttribute('aria-hidden', 'true');
+    });
+    prepareBtn.addEventListener('click', () => {
+      errMsg.style.display = 'none';
+      keyInput.value = '';
+      modalBack.style.display = 'flex';
+      modalBack.setAttribute('aria-hidden', 'false');
+      keyInput.focus();
+    });
+
+    modalCancel.addEventListener('click', closeModal);
+    modalBack.addEventListener('click', (e) => { if (e.target === modalBack) closeModal(); });
+    function closeModal() {
+      modalBack.style.display = 'none';
+      modalBack.setAttribute('aria-hidden', 'true');
+      errMsg.style.display = 'none';
+    }
+
+    modalSubmit.addEventListener('click', async () => {
+      const val = keyInput.value.trim();
+      if (!val || val !== D_KEY) {
+        errMsg.style.display = 'block';
+        keyInput.focus();
+        return;
+      }
+      closeModal();
+      enterPanel.style.display = 'none';
+      videoWrap.style.display = 'flex';
+      videoWrap.setAttribute('aria-hidden', 'false');
+
+      try {
+        prankVideo.volume = 1.0;
+        prankVideo.muted = false;
+        prankVideo.controls = true;
+        await prankVideo.play();
+      } catch (e) {
+        console.error('Playback failed:', e);
+        alert('Playback with sound was blocked by the browser. Click the video to start audio.');
+      }
+    });
+
+    function formatTime(sec) {
+      if (!sec || isNaN(sec)) return '00:00';
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = Math.floor(sec % 60).toString().padStart(2, '0');
+      return m + ':' + s;
+    }
+
+    // download/share/open full
+    //   downloadBtn.addEventListener('click', () => {
+    //     const a = document.createElement('a');
+    //     a.href = 'prank.mp4';
+    //     a.download = 'prank.mp4';
+    //     document.body.appendChild(a);
+    //     a.click();
+    //     a.remove();
+    //   });
+    //   shareBtn.addEventListener('click', async () => {
+    //     if (navigator.share) {
+    //       try { await navigator.share({title:'Exclusive Preview', url:location.href}); }
+    //       catch(e){ /* ignore */ }
+    //     } else {
+    //       try { await navigator.clipboard.writeText(location.href); alert('URL copied to clipboard'); }
+    //       catch(e){ alert('Could not copy URL'); }
+    //     }
+    //   });
+    openFull.addEventListener('click', () => {
+      const container = videoWrap;
+      if (container.requestFullscreen) container.requestFullscreen().catch(() => window.open('prank.mp4', '_blank'));
+      else window.open('prank.mp4', '_blank');
+    });
+
+    keyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') modalSubmit.click(); });
+
+    prankVideo.controls = false;
+    prankVideo.muted = true;
+    prankVideo.addEventListener('click', () => {
+      if (prankVideo.muted) alert('To play with sound, press "Play Video" and enter the private key.');
+    });
+  </script>
+</body>
+
+</html>
